@@ -1,0 +1,36 @@
+version: '3'
+
+services:
+
+  pgsql:
+    image: postgres:11
+    environment:
+      POSTGRES_PASSWORD: test9*8&PSQL
+      PGDATA : /var/lib/postgresql/data/pgdata
+    ports:
+      - 5432:5432
+    volumes:
+      - pgsqlpatchdata:/var/lib/postgresql/data/pgdata
+  
+  mssql:
+    image: mcr.microsoft.com/mssql/server:2019-CU4-ubuntu-16.04
+    environment:
+      ACCEPT_EULA: Y
+      SA_PASSWORD: test9*8&MSSQL
+      MSSQL_PID: Express
+    ports:
+      - 1433:1433
+    volumes:
+      - mssqlpatchdata:/var/opt/mssql
+
+  adminer:
+    image: adminer
+    restart: always
+    ports:
+      - 5011:8080
+    
+volumes:
+  mssqlpatchdata:
+  pgsqlpatchdata:
+  
+    

@@ -1,0 +1,30 @@
+image: golang:1.14-stretch
+
+variables:
+  PROJECT_NAME: ele
+
+before_script:
+  - apt-get update
+  - apt-get install zip unzip -qy
+  - go install
+
+stages:
+  - test
+  - build
+  - deploy
+
+format:
+  stage: test
+  script:
+    - go fmt
+    - go vet
+    - go test ./... -coverprofile coverage.out
+    - go tool cover -func coverage.out
+
+compile:
+  stage: build
+  script:
+    - bash build.sh $PROJECT_NAME
+  artifacts:
+    paths:
+      - build

@@ -1,0 +1,491 @@
+1.  Folder Structure
+
+sql scripts
+
+  Customers
+	V1.0.0
+	Create Table Customers
+	V1.0.1
+	Alter table Customers
+	
+	CustomerTypes -- Automatic depends on Customers
+
+  Shops
+	V1.0.1
+	Create Table Shops
+
+  CustomerShops
+	V1.0.1
+	# Requires: Shops, Customers
+	Create Table CustomerShops
+
+		CustomerShopTargets -- Nested: Automatic depends CustomerShops
+		V1.0.3
+		# Requires: Targets --@1.0.2--  Would have had to run 1.0.2 before running 1.0.3 could be a validation??
+		Create Table CustomerShopTargets
+
+		V-Next
+		VNext
+		V__Next
+		Update Table CustomerAddresses
+
+		// Known Tags
+		NEXT 
+		QA
+		UAT
+  Targets
+	1.0.2
+	Create Table Targets
+Semantic versionning
+   Address
+	1.1-next
+	Create table address
+
+   CustomerAddresses
+	1.1-next
+	# After: Address
+	Create Table CustomerAddresses
+
+
+
+TAG verioniong (Semantic versioning still have issues of not knowing which version will be releases)
+   Address
+	Next
+
+   CustomerAddresses
+	Next
+	# After: Address
+	Create Table CustomerAddresses
+
+
+DependencyTree
+
+Customers
+    CustomerShops
+		CustomerShopTargets
+	CustomerAddresses
+Shops
+	CustomerShops
+		CustomerShopTargets
+Targets
+	CustomerShopTargets
+Address
+	CustomerAddresses
+
+	
+	
+		Address --------------*
+		|
+	Shops ----------------*
+	|
+    |                       CustomerAddresses
+	|						|
+Customers ------------ CustomerShops ------------------------CustomerShopTargets
+	|
+	Targets --------------*
+
+
+		Customers
+	Targets --------------- CustomerShopTargets
+Address ---------------- CustomerAddresses
+	Shops ----------------- CustomerShops
+		
+
+
+Add: CustomerShopTargets
+       Depends on CustomerShops, Targets
+
+Add CustomerShops 
+       Depends on Customer, Shops
+
+1.				CustomerShops
+			Customers
+		Targets ------------- CustomerShopTargets
+	Shops
+Address ---------------- CustomerAddresses
+
+
+2.				--CustomerShops--
+			Customers
+		Targets ------------- CustomerShopTargets
+	Shops ----------------- CustomerShops
+Address ---------------- CustomerAddresses
+
+
+2.1				
+			1.Customers
+		1.Targets ------------- 2.CustomerShopTargets
+	1.Shops ----------------- 2.CustomerShops
+1.Address ---------------- 2.CustomerAddresses
+
+2.2				
+			1.Customers
+		1.Targets ------------- *
+	1.Shops ----------------- 2.CustomerShops ---------------- 3.CustomerShopTargets
+1.Address ---------------- 2.CustomerAddresses
+
+
+STARTER PROJECTS
+
+Your first attempt should or would not worry about versioning / versioning should be optional
+
+
+COMMANDS
+
+Explain: Show what is going to run
+
+
+Publish: 
+Produces Sql Output
+
+Run: 
+Execute Scripts
+
+
+Publish and Run usese sub-COMMANDS: (extensibility)
+
+
+run mssql ... 
+run psql ...
+run logstash ...
+run mongodb ...
+
+
+publish mssql ..
+publish psql
+
+golang has driver support via names
+
+
+
+Excluding Files/Folders (basic implentation, also include vs exclude issue with rollback will comeback to this)
+-----------------------
+
+Will need to ensure it complies with .gitignore standards
+
+Customers/ 
+
+should exclude all files within Customers 
+
+should als exlcude Customers if its nested in other paths (Confirm with .gitignore rules)
+
+MasterData/Customers ....
+
+Rollback Defaults
+*.rollback.*
+
+Negate rules fot gitignore
+*.*
+!*.sql
+#!data/
+#!data/pgsql/
+#!*.sql
+#!.vscode/
+#!.vscode/*.json
+
+
+
+Initialising Data for tables (basic implentation)
+----------------------------
+
+Initialise Data  (Convention to always run last on migration/ alway run first on rollback
+
+createTable.before.sql
+createTable.sql
+createTable.after.sql
+
+
+// Before and after keywords
+createTable.sql // Reads better but with multiple files this would be difficult to navigate
+before.createTable.sql
+after.createTable.sql
+
+before.createCustomer.createShop.sql
+
+
+// adding it after the name keeps it organised but will cause the sequence to be out.. will have to specifically build this into ele
+createTable.before.cleanup.sql
+createTable.after.init.sql
+
+-exlcude createTable.rb.sql
+
+createShopCustomers.requires.shops.customers.sql // maybe but no for now
+
+should also be valid within a folder
+after.sql 
+before.sql
+
+
+COMMANDS
+----------
+
+ele init ?? DB etc
+
+
+ele migrate -plan
+ele rollback -plan 
+
+ele add *
+
+ele add -list
+ele add 			:show added 
+
+ele ls -staged *
+ele ls -all *
+ele ls -unstaged *
+ele status 
+
+
+
+ele promote UAT
+
+Check out / Scope / Range
+------------------
+ele checkout UAT
+ele checkout -n UAT 
+
+
+ele tag x		: Add Tag
+ele tag			: display tags
+ele tag -rm x   : Remove tag
+
+display tags 
+tagname (active)  if in range 
+tagname (in scope)
+
+ele activate x
+ele activate x:y
+ele activate :y 
+ele activate -start=x -end=y
+
+
+in the ele.yaml you should be able to provide a default scope 
+so as a developer it will default to develop instead of all 
+
+
+Promote
+--------
+-source defaults to current tag in config
+
+GitFlow
+ele promote -source=QA -target=UAT
+
+Release Flow
+ele stage -source=QA *
+ele stage -source=QA Customers*  (Folder Path / Module search)
+ele stage -source=QA Customers/migration.file  inlcude specific file
+ele stage -source=QA TICKET-29202  (Git integration)
+
+ele promote -staged -targer=UAT
+
+Later
+ele promote -source=QA -target=UAT -m "Commit message" -a (a= autocommit)
+
+
+
+
+PROJECTS
+----------
+
+No project root should not cause issues (Maybe except on promote / stage)
+
+
+config
+--------
+Filname conventions Docker-compose allows for both yml and yaml
+
+
+Have a weird version number V.1.0.0
+-----
+
+ele inspect -t V.1.0.0 --// ele tag inspect V.1.0.0 
+
+
+
+Doc 
+---- aways width 80
+
+
+List [All] [Staged] [V1.0.0:V1.0.1]
+
+Version 	Module							File
+--------------------------------------------------------------------------------
+
+
+EnvironmentState
+------------
+
+-later global - user
+-later local - user
+local - project 
+
+global user directory somewhere
+local user in the .ele folder 
+local project in the project root or specified locations ./environments
+or even in the ele.yml
+
+ele env list 
+later --ele env add 
+ele env inspect 
+
+
+
+
+
+Issues
+--------
+
+Done
+----
+
+
+2. CLI - change tags cli to work like env (3 pillars env, tag ... promote)
+7. CLI documentations / consistency
+7.1 Include env in Migrate and rollback
+7.2 Migrate and rollback consitency
+7.3 Deactivate Environment
+
+7.6 List command could be ls or list
+7.5 List / ls in Tag and Env force sub command 
+7.8 Create DB should use environments + env argument
+7.9 All other commands consitent
+
+4. CICD wait
+
+9. Hostname missing from database config
+
+3. COMMON - _init versioning for intialization scripts 
+6. Multiple version parser support (date format, specify prefix, don't se Vehicles as a version)
+
+
+1. CICD - override connection settings using environment variables and/or command line args
+
+TODO:
+-----
+
+
+
+
+5. CICD docker file for running migrations
+
+
+8. Release build - run on windows
+
+
+
+Future
+------
+
+Configuration - before v1
+-------------
+
+Consolidate env files and ele.yml - override config file like docker compose
+Issues (when creating or removing tags we update the config file, so all formatting will be lost)
+Consider changing to TOML 
+
+
+Improved Transaction Levels support
+-----------------------------------
+
+Per infile seperator GO or ;
+Per file
+Per Version
+All migrations in range
+
+
+CLI Improvements
+----------------
+
+init versions                                                   -vnext
+_init should/could be seen as an version (version parser)		-vnext
+
+ele promote Applications/ UAT
+ele promote -t repeat V1.0.0.
+bash integration
+
+Remove environment : ele env rm  -vnext
+Finalize redo/undo : ele promote undo / and redo -vnext 
+
+Lock files / lock table - Only to Satisfy critics
+-----------------------
+Prevent scripts from running more than ones
+Validate agains sha 
+
+Work in global
+--------------
+
+Be able to use global environments to run / migrate sql scripts
+Quickly execute sql commands in a folder (Ignore gloabal)
+
+
+Output to Files
+---------------
+
+Produce output as files instead of executing directly to SQL
+
+Templating
+----------
+
+Even consider liquid templates and Jekyll to script out sql 
+
+Devops Containers
+-----------------
+
+ele wait -timout=5000
+ele status / sidecar
+
+override db password with env variables or command line arguments
+
+kubernetes scheduling to run jobs
+
+
+VS Code integration
+-------------------
+
+Status bar // run or swith tags // or switch environments
+Execute file using ele directly F5 to run file using ele environment
+
+
+Generators and IL (Intermediate Language) Migrations file
+---------------------------------------------------------
+
+Liquibase file structure - generate to sql or back from sql 
+Generate on the fly, no phisical file created unles required
+
+
+Output to file
+--------------
+
+Instead of migrating directly to sql, generate a file
+
+
+Code integration
+----------------
+
+SQL is a DSL, the best at retrieving data from a relational database
+
+C# Code generator, at compile time generate c# code from sql without creating new files 
+
+
+Database Command integration
+----------------------------
+
+Inspect table
+
+ele migrate ... gives an error -> After.sql: pq: relation "applications" already exist
+
+ele table inspect applications  would be nice
+
+
+Inspect function
+Inspect storedprocedure
+
+
+Database provider plugings
+--------------------------
+
+Load sql providers as plugins instead of including them all in same executable
+
+
+
+
